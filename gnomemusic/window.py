@@ -319,6 +319,21 @@ class Window(Gtk.ApplicationWindow):
         GLib.timeout_add(1000, self._overlay.add_overlay, self.notification)
 
     @log
+    def _init_duplicate_playlist_notification(self):
+        self.notification = Gd.Notification()
+        self.notification.set_timeout(5)
+
+        grid = Gtk.Grid(valign=Gtk.Align.CENTER, margin_right=8)
+        grid.set_column_spacing(8)
+        self.notification.add(grid)
+
+        label = _("A playlist with that name already exists!")
+        grid.add(Gtk.Label.new(label))
+
+        self.notification.show_all()
+        self._overlay.add_overlay(self.notification)
+
+    @log
     def _init_playlist_removal_notification(self):
         self.notification = Gd.Notification()
         self.notification.set_timeout(20)

@@ -678,6 +678,7 @@ class ArtistAlbumWidget(Gtk.Box):
 class PlaylistDialog():
     @log
     def __init__(self, parent):
+        self.window = parent # or should arg be called Window?
         self.ui = Gtk.Builder()
         self.ui.add_from_resource('/org/gnome/Music/PlaylistDialog.ui')
         self.dialog_box = self.ui.get_object('dialog1')
@@ -782,8 +783,13 @@ class PlaylistDialog():
 
     @log
     def _on_editing_done(self, editable, data=None):
-        if editable.get_text() != '':
-            self.playlist.create_playlist(editable.get_text())
+        text_entered = editable.get_text()
+        if text_entered:
+            existing_playlists = [row[0] for row in self.model]
+            if text_entered in existing_playlists:
+                self.window._init_duplicate_playlist_notification()
+            else:
+                self.playlist.create_playlist(text_entered)
 
     @log
     def _on_playlist_created(self, playlists, item):
