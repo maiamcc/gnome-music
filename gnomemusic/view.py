@@ -803,9 +803,9 @@ class Playlist(ViewContainer):
         playlistPlayAction = Gio.SimpleAction.new('playlist_play', None)
         playlistPlayAction.connect('activate', self._on_play_activate)
         window.add_action(playlistPlayAction)
-        playlistDeleteAction = Gio.SimpleAction.new('playlist_delete', None)
-        playlistDeleteAction.connect('activate', self._on_delete_activate)
-        window.add_action(playlistDeleteAction)
+        self.playlistDeleteAction = Gio.SimpleAction.new('playlist_delete', None)
+        self.playlistDeleteAction.connect('activate', self._on_delete_activate)
+        window.add_action(self.playlistDeleteAction)
         self._grid.insert_row(0)
         self._grid.attach(self.headerbar, 1, 0, 1, 1)
 
@@ -1137,6 +1137,12 @@ class Playlist(ViewContainer):
             self.songs_count = 0
             self._update_songs_count()
 
+        # disable delete button if current playlist is a smart playlist
+        if self.current_playlist_is_protected():
+            self.playlistDeleteAction.set_enabled(False)
+        else:
+            self.playlistDeleteAction.set_enabled(True)
+
     @log
     def _add_item(self, source, param, item, remaining=0, data=None):
         self._add_item_to_model(item, self._model)
@@ -1180,6 +1186,14 @@ class Playlist(ViewContainer):
             select_path(self._model.get_path(_iter))
         self.view.emit('item-activated', '0',
                        self._model.get_path(_iter))
+
+    @log
+    def current_playlist_is_protected(self):
+        current_playlist_id = self.current_playlist.get_id()
+        if current_playlist_id in StaticPlaylists.get_protected_ids():
+            return True
+        else:
+            return False
 
     @log
     def stage_playlist_for_deletion(self):
