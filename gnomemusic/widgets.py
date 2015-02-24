@@ -56,6 +56,37 @@ except Exception as e:
 playlists = Playlists.get_default()
 
 
+class StarHandler():
+    @log
+    def __init__(self, parent, star_index):
+        self.star_index = star_index
+        self.star_renderer_click = False
+        self.parent = parent
+
+    @log
+    def _add_star_renderers(self, list_widget, cols):
+        star_renderer = CellRendererClickablePixbuf(self.parent.view)
+        star_renderer.connect("clicked", self._on_star_toggled)
+        list_widget.add_renderer(star_renderer, lambda *args: None, None)
+        cols[0].clear_attributes(star_renderer)
+        cols[0].add_attribute(star_renderer, 'show_star', self.star_index)
+
+    @log
+    def _on_star_toggled(self, widget, path):
+        try:
+            _iter = self.parent._model.get_iter(path)
+        except TypeError:
+            return
+
+        new_value = not self.parent._model.get_value(_iter, self.star_index)
+        self.parent._model.set_value(_iter, self.star_index, new_value)
+        song_item = self.parent._model.get_value(_iter, 5)
+        grilo.toggle_favorite(song_item) # toggle favorite status in database
+        playlists.update_static_playlist(StaticPlaylists.Favorites)
+
+        # Use this flag to ignore the upcoming _on_item_activated call
+        self.star_renderer_click = True
+
 class AlbumWidget(Gtk.EventBox):
 
     tracks = []
@@ -91,8 +122,8 @@ class AlbumWidget(Gtk.EventBox):
         self.view.remove(child_view)
         view_box.add(child_view)
         self.add(self.ui.get_object('AlbumWidget'))
+        self.star_handler = StarHandler(self.parentview, 10)
         self._add_list_renderers()
-        self.star_renderer_click = False
         self.get_style_context().add_class('view')
         self.get_style_context().add_class('content-view')
         self.show_all()
@@ -103,8 +134,8 @@ class AlbumWidget(Gtk.EventBox):
 
     @log
     def _on_item_activated(self, widget, id, path):
-        if self.star_renderer_click:
-            self.star_renderer_click = False
+        if self.star_handler.star_renderer_click:
+            self.star_handler.star_renderer_click = False
             return
 
         _iter = self.model.get_iter(path)
@@ -160,7 +191,7 @@ class AlbumWidget(Gtk.EventBox):
         cols[0].clear_attributes(durationRenderer)
         cols[0].add_attribute(durationRenderer, 'markup', 1)
 
-        self.parentview._add_star_renderers(list_widget, cols, star_index=10)
+        self.star_handler._add_star_renderers(list_widget, cols)
 
     def _on_list_widget_icon_render(self, col, cell, model, _iter, data):
         if model != self.player.playlist:
@@ -319,21 +350,21 @@ class AlbumWidget(Gtk.EventBox):
                 _("%d min") % (int(self.duration / 60) + 1))
         return False
 
-    @log
-    def _on_star_toggled(self, widget, path):
-        try:
-            _iter = self.model.get_iter(path)
-        except TypeError:
-            return
+    # @log
+    # def _on_star_toggled(self, widget, path):
+    #     try:
+    #         _iter = self.model.get_iter(path)
+    #     except TypeError:
+    #         return
 
-        new_value = not self.model.get_value(_iter, 10)
-        self.model.set_value(_iter, 10, new_value)
-        song_item = self.model.get_value(_iter, 5) # er, will this definitely return MediaAudio obj.?
-        grilo.toggle_favorite(song_item) # toggle favorite status in database
-        playlists.update_static_playlist(StaticPlaylists.Favorites)
+    #     new_value = not self.model.get_value(_iter, 10)
+    #     self.model.set_value(_iter, 10, new_value)
+    #     song_item = self.model.get_value(_iter, 5) # er, will this definitely return MediaAudio obj.?
+    #     grilo.toggle_favorite(song_item) # toggle favorite status in database
+    #     playlists.update_static_playlist(StaticPlaylists.Favorites)
 
-        # Use this flag to ignore the upcoming _on_item_activated call
-        self.star_renderer_click = True
+    #     # Use this flag to ignore the upcoming _on_item_activated call
+    #     self.star_renderer_click = True
 
 
 class ArtistAlbums(Gtk.Box):

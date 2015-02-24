@@ -107,8 +107,9 @@ class ViewContainer(Gtk.Stack):
         if not use_sidebar or sidebar:
             self._grid.add(box)
 
+        self.star_handler = Widgets.StarHandler(self, 9)
         self.view.click_handler = self.view.connect('item-activated', self._on_item_activated)
-        self.star_renderer_click = False
+        # self.star_handler.star_renderer_click = False
         self.view.connect('selection-mode-request', self._on_selection_mode_request)
         self._cursor = None
         self.window = window
@@ -262,30 +263,6 @@ class ViewContainer(Gtk.Stack):
     def _on_list_widget_star_render(self, col, cell, model, _iter, data):
         pass
 
-    @log
-    def _add_star_renderers(self, list_widget, cols, star_index=9):
-        star_renderer = Widgets.CellRendererClickablePixbuf(self.view)
-        star_renderer.connect("clicked", self._on_star_toggled)
-        list_widget.add_renderer(star_renderer, lambda *args: None, None)
-        cols[0].clear_attributes(star_renderer)
-        cols[0].add_attribute(star_renderer, 'show_star', star_index)
-
-    @log
-    def _on_star_toggled(self, widget, path):
-        try:
-            _iter = self._model.get_iter(path)
-        except TypeError:
-            return
-
-        new_value = not self._model.get_value(_iter, 9)
-        self._model.set_value(_iter, 9, new_value)
-        song_item = self._model.get_value(_iter, 5) # er, will this definitely return MediaAudio obj.?
-        grilo.toggle_favorite(song_item) # toggle favorite status in database
-        playlists.update_static_playlist(StaticPlaylists.Favorites)
-
-        # Use this flag to ignore the upcoming _on_item_activated call
-        self.star_renderer_click = True
-
 # Class for the Empty View
 class Empty(Gtk.Stack):
     @log
@@ -330,8 +307,8 @@ class Albums(ViewContainer):
 
     @log
     def _on_item_activated(self, widget, id, path):
-        if self.star_renderer_click:
-            self.star_renderer_click = False
+        if self.star_handler.star_renderer_click:
+            self.star_handler.star_renderer_click = False
             return
 
         try:
@@ -420,8 +397,8 @@ class Songs(ViewContainer):
 
     @log
     def _on_item_activated(self, widget, id, path):
-        if self.star_renderer_click:
-            self.star_renderer_click = False
+        if self.star_handler.star_renderer_click:
+            self.star_handler.star_renderer_click = False
             return
 
         try:
@@ -492,7 +469,7 @@ class Songs(ViewContainer):
                                  self._on_list_widget_title_render, None)
         cols[0].add_attribute(title_renderer, 'text', 2)
 
-        self._add_star_renderers(list_widget, cols)
+        self.star_handler._add_star_renderers(list_widget, cols)
 
         duration_renderer = Gd.StyledTextRenderer(
             xpad=32,
@@ -648,8 +625,8 @@ class Artists (ViewContainer):
 
     @log
     def _on_item_activated(self, widget, item_id, path):
-        if self.star_renderer_click:
-            self.star_renderer_click = False
+        if self.star_handler.star_renderer_click:
+            self.star_handler.star_renderer_click = False
             return
 
         try:
@@ -897,7 +874,7 @@ class Playlist(ViewContainer):
                                  self._on_list_widget_title_render, None)
         cols[0].add_attribute(title_renderer, 'text', 2)
 
-        self._add_star_renderers(list_widget, cols)
+        self.star_handler._add_star_renderers(list_widget, cols)
 
         duration_renderer = Gd.StyledTextRenderer(
             xpad=32,
@@ -1023,8 +1000,8 @@ class Playlist(ViewContainer):
 
     @log
     def _on_item_activated(self, widget, id, path):
-        if self.star_renderer_click:
-            self.star_renderer_click = False
+        if self.star_handler.star_renderer_click:
+            self.star_handler.star_renderer_click = False
             return
 
         try:
@@ -1347,8 +1324,8 @@ class Search(ViewContainer):
 
     @log
     def _on_item_activated(self, widget, id, path):
-        if self.star_renderer_click:
-            self.star_renderer_click = False
+        if self.star_handler.star_renderer_click:
+            self.star_handler.star_renderer_click = False
             return
 
         try:
@@ -1499,11 +1476,7 @@ class Search(ViewContainer):
                                  self._on_list_widget_title_render, None)
         cols[0].add_attribute(title_renderer, 'text', 2)
 
-        star_renderer = Widgets.CellRendererClickablePixbuf(self.view, hidden=True)
-        star_renderer.connect("clicked", self._on_star_toggled)
-        list_widget.add_renderer(star_renderer,
-                                 self._on_list_widget_star_render, None)
-        cols[0].add_attribute(star_renderer, 'show_star', 9)
+        self.star_handler._add_star_renderers(list_widget, cols)
 
         cells = cols[0].get_cells()
         cols[0].reorder(cells[0], -1)
