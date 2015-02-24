@@ -64,10 +64,11 @@ class AlbumWidget(Gtk.EventBox):
     noArtworkIcon = ALBUM_ART_CACHE.get_default_icon(256, 256, False)
 
     @log
-    def __init__(self, player):
+    def __init__(self, player, parentview):
         Gtk.EventBox.__init__(self)
         self.player = player
         self.iterToClean = None
+        self.parentview = parentview
 
         self.ui = Gtk.Builder()
         self.ui.add_from_resource('/org/gnome/Music/AlbumWidget.ui')
@@ -159,11 +160,7 @@ class AlbumWidget(Gtk.EventBox):
         cols[0].clear_attributes(durationRenderer)
         cols[0].add_attribute(durationRenderer, 'markup', 1)
 
-        star_renderer = CellRendererClickablePixbuf(self.view)
-        star_renderer.connect("clicked", self._on_star_toggled)
-        list_widget.add_renderer(star_renderer, lambda *args: None, None)
-        cols[0].clear_attributes(star_renderer)
-        cols[0].add_attribute(star_renderer, 'show_star', 10)
+        self.parentview._add_star_renderers(list_widget, cols, star_index=10)
 
     def _on_list_widget_icon_render(self, col, cell, model, _iter, data):
         if model != self.player.playlist:

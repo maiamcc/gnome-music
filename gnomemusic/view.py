@@ -141,6 +141,10 @@ class ViewContainer(Gtk.Stack):
         self._discovering_urls = {}
         grilo.connect('changes-pending', self._on_changes_pending)
 
+    #DELETE THIS
+    # def sayhi(self):
+    #     print("hello there from", self)
+
     @log
     def _on_changes_pending(self, data=None):
         pass
@@ -259,6 +263,14 @@ class ViewContainer(Gtk.Stack):
         pass
 
     @log
+    def _add_star_renderers(self, list_widget, cols, star_index=9):
+        star_renderer = Widgets.CellRendererClickablePixbuf(self.view)
+        star_renderer.connect("clicked", self._on_star_toggled)
+        list_widget.add_renderer(star_renderer, lambda *args: None, None)
+        cols[0].clear_attributes(star_renderer)
+        cols[0].add_attribute(star_renderer, 'show_star', star_index)
+
+    @log
     def _on_star_toggled(self, widget, path):
         try:
             _iter = self._model.get_iter(path)
@@ -273,7 +285,6 @@ class ViewContainer(Gtk.Stack):
 
         # Use this flag to ignore the upcoming _on_item_activated call
         self.star_renderer_click = True
-
 
 # Class for the Empty View
 class Empty(Gtk.Stack):
@@ -292,7 +303,7 @@ class Albums(ViewContainer):
     @log
     def __init__(self, window, player):
         ViewContainer.__init__(self, 'albums', _("Albums"), window, Gd.MainViewType.ICON)
-        self._albumWidget = Widgets.AlbumWidget(player)
+        self._albumWidget = Widgets.AlbumWidget(player, self)
         self.player = player
         self.add(self._albumWidget)
         self.albums_selected = []
@@ -481,12 +492,7 @@ class Songs(ViewContainer):
                                  self._on_list_widget_title_render, None)
         cols[0].add_attribute(title_renderer, 'text', 2)
 
-        # ADD STAR RENDERERS
-        star_renderer = Widgets.CellRendererClickablePixbuf(self.view)
-        star_renderer.connect("clicked", self._on_star_toggled)
-        list_widget.add_renderer(star_renderer,
-                                self._on_list_widget_star_render, None)
-        cols[0].add_attribute(star_renderer, 'show_star', 9)
+        self._add_star_renderers(list_widget, cols)
 
         duration_renderer = Gd.StyledTextRenderer(
             xpad=32,
@@ -891,12 +897,7 @@ class Playlist(ViewContainer):
                                  self._on_list_widget_title_render, None)
         cols[0].add_attribute(title_renderer, 'text', 2)
 
-        # ADD STAR RENDERERS
-        star_renderer = Widgets.CellRendererClickablePixbuf(self.view)
-        star_renderer.connect("clicked", self._on_star_toggled)
-        list_widget.add_renderer(star_renderer,
-                                self._on_list_widget_star_render, None)
-        cols[0].add_attribute(star_renderer, 'show_star', 9)
+        self._add_star_renderers(list_widget, cols)
 
         duration_renderer = Gd.StyledTextRenderer(
             xpad=32,
@@ -1325,7 +1326,7 @@ class Search(ViewContainer):
 
         self.albums_selected = []
         self._albums = {}
-        self._albumWidget = Widgets.AlbumWidget(player)
+        self._albumWidget = Widgets.AlbumWidget(player, self)
         self.add(self._albumWidget)
 
         self.artists_albums_selected = []
@@ -1355,6 +1356,8 @@ class Search(ViewContainer):
         except TypeError:
             return
         _iter = self._model.get_iter(child_path)
+        the_source = self._model[_iter][5].get_source()
+        print(the_source)
         if self._model[_iter][11] == 'album':
             title = self._model.get_value(_iter, 2)
             artist = self._model.get_value(_iter, 3)
