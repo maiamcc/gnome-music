@@ -1329,8 +1329,6 @@ class Search(ViewContainer):
         except TypeError:
             return
         _iter = self.model.get_iter(child_path)
-        the_source = self.model[_iter][5].get_source()
-        print(the_source)
         if self.model[_iter][11] == 'album':
             title = self.model.get_value(_iter, 2)
             artist = self.model.get_value(_iter, 3)
