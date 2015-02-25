@@ -142,10 +142,6 @@ class ViewContainer(Gtk.Stack):
         self._discovering_urls = {}
         grilo.connect('changes-pending', self._on_changes_pending)
 
-    #DELETE THIS
-    # def sayhi(self):
-    #     print("hello there from", self)
-
     @log
     def _on_changes_pending(self, data=None):
         pass
@@ -1476,7 +1472,7 @@ class Search(ViewContainer):
                                  self._on_list_widget_title_render, None)
         cols[0].add_attribute(title_renderer, 'text', 2)
 
-        self.star_handler._add_star_renderers(list_widget, cols)
+        self.star_handler._add_star_renderers(list_widget, cols, hidden=True)
 
         cells = cols[0].get_cells()
         cols[0].reorder(cells[0], -1)

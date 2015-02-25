@@ -64,8 +64,8 @@ class StarHandler():
         self.parent = parent
 
     @log
-    def _add_star_renderers(self, list_widget, cols):
-        star_renderer = CellRendererClickablePixbuf(self.parent.view)
+    def _add_star_renderers(self, list_widget, cols, hidden=False):
+        star_renderer = CellRendererClickablePixbuf(self.parent.view, hidden=hidden)
         star_renderer.connect("clicked", self._on_star_toggled)
         list_widget.add_renderer(star_renderer, lambda *args: None, None)
         cols[0].clear_attributes(star_renderer)
@@ -396,7 +396,7 @@ class ArtistAlbums(Gtk.Box):
                                    GObject.TYPE_BOOLEAN,
                                    GObject.TYPE_INT
                                    )
-        self.model.connect('row-changed', self.model_row_changed)
+        self.model.connect('row-changed', self._model_row_changed)
 
         self._hbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self._albumBox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,
@@ -558,7 +558,7 @@ class ArtistAlbumWidget(Gtk.Box):
         self.album = album
         self.artist = artist
         self.model = model
-        self.model.connect('row-changed', self.model_row_changed)
+        self.model.connect('row-changed', self._model_row_changed)
         self.header_bar = header_bar
         self.selectionMode = False
         self.selectionModeAllowed = selectionModeAllowed
