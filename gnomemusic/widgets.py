@@ -74,13 +74,13 @@ class StarHandler():
     @log
     def _on_star_toggled(self, widget, path):
         try:
-            _iter = self.parent._model.get_iter(path)
+            _iter = self.parent.model.get_iter(path)
         except TypeError:
             return
 
-        new_value = not self.parent._model.get_value(_iter, self.star_index)
-        self.parent._model.set_value(_iter, self.star_index, new_value)
-        song_item = self.parent._model.get_value(_iter, 5)
+        new_value = not self.parent.model.get_value(_iter, self.star_index)
+        self.parent.model.set_value(_iter, self.star_index, new_value)
+        song_item = self.parent.model.get_value(_iter, 5)
         grilo.toggle_favorite(song_item) # toggle favorite status in database
         playlists.update_static_playlist(StaticPlaylists.Favorites)
 
@@ -122,7 +122,7 @@ class AlbumWidget(Gtk.EventBox):
         self.view.remove(child_view)
         view_box.add(child_view)
         self.add(self.ui.get_object('AlbumWidget'))
-        self.star_handler = StarHandler(self.parentview, 10)
+        self.star_handler = StarHandler(self, 10)
         self._add_list_renderers()
         self.get_style_context().add_class('view')
         self.get_style_context().add_class('content-view')
@@ -396,7 +396,7 @@ class ArtistAlbums(Gtk.Box):
                                    GObject.TYPE_BOOLEAN,
                                    GObject.TYPE_INT
                                    )
-        self.model.connect('row-changed', self._model_row_changed)
+        self.model.connect('row-changed', self.model_row_changed)
 
         self._hbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self._albumBox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL,
@@ -558,7 +558,7 @@ class ArtistAlbumWidget(Gtk.Box):
         self.album = album
         self.artist = artist
         self.model = model
-        self.model.connect('row-changed', self._model_row_changed)
+        self.model.connect('row-changed', self.model_row_changed)
         self.header_bar = header_bar
         self.selectionMode = False
         self.selectionModeAllowed = selectionModeAllowed
